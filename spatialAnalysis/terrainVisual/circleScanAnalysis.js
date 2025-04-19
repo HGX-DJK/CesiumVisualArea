@@ -313,7 +313,7 @@ circleScanAnalysis.prototype.drawLine = function(leftPoint, secPoint, color) {
         polyline: {
             positions: [leftPoint, secPoint],
             arcType: Cesium.ArcType.NONE,
-            width: 5,
+            width: 2,
             material: color,
             depthFailMaterial: color
         }
