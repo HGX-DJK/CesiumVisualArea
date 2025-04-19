@@ -94,27 +94,13 @@ function circleScanAnalysis(viewer) {
           name:'点实体',
           polyline: {
             show: true,
-            // positions: polylinePath,
             positions: [polylinePath[0], polylinePath[1]],
             material: Cesium.Color.BLUE,
             depthFailMaterial: Cesium.Color.BLUE,
             width: 2,
             clampToGround: true,
             classificationType: Cesium.ClassificationType.TERRAIN
-          },
-          // position: that.getHorizontalMidpoint(polylinePath[0], polylinePath[1]),
-          // label: {
-          //   text: distance.toFixed(2) + '米',
-          //   font: '14pt monospace',
-          //   color: Cesium.Color.RED,
-          //   backgroundColor: Cesium.Color.CORAL,
-          //   style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          //   outlineWidth: 2,
-          //   heightReference: Cesium.HeightReference.NONE,
-          //   verticalOrigin: Cesium.VerticalOrigin.TOP,
-          //   pixelOffset: new Cesium.Cartesian2(50, 0),
-          //   disableDepthTestDistance: Number.POSITIVE_INFINITY
-          // }
+          }
         });
         // 端点和标签
         tempPoint = that.viewer.entities.add({
