@@ -82,7 +82,6 @@ TerrainVisual.prototype.performLOSAnalysis = async function (startCartesian, end
             sampled[i].height
         );
         console.log(terrainHeight,expectedSightHeight,"wwwwwwwwwww");
-        
         const isCurrentlyVisible = terrainHeight < expectedSightHeight +  this.personHeight ;
         // 绘制线段（红 or 绿）
         this.viewer.entities.add({
@@ -90,9 +89,9 @@ TerrainVisual.prototype.performLOSAnalysis = async function (startCartesian, end
                 positions: [lastCartesian, current],
                 width: 2,
                 material: isCurrentlyVisible ? Cesium.Color.LIME : Cesium.Color.RED,
+                clampToGround: true
             },
         });
-
         // 更新起点
         lastCartesian = current;
     }
@@ -107,14 +106,12 @@ TerrainVisual.prototype.performLOSAnalysis = async function (startCartesian, end
  * @param {*} fov 
  * @param {*} rayCount 
  */
-TerrainVisual.prototype.performSectorLOS = async function (center, target, radius = 1000, fov = 60,rayCount = 120) {
+TerrainVisual.prototype.performSectorLOS = async function (center, target, radius = 1000, fov = 360,rayCount = 240) {
     const centerCarto = Cesium.Cartographic.fromCartesian(center);
     const centerHeight = centerCarto.height;
-
     // 计算方向向量
     const direction = Cesium.Cartesian3.subtract(target, center, new Cesium.Cartesian3());
     Cesium.Cartesian3.normalize(direction, direction);
-
     // 得到 center 对应的 ENU 本地坐标系
     const transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
     const invTransform = Cesium.Matrix4.inverseTransformation(transform, new Cesium.Matrix4());
@@ -126,18 +123,14 @@ TerrainVisual.prototype.performSectorLOS = async function (center, target, radiu
 
     // 每条射线角度步长
     const angleStep = (endAngle - startAngle) / rayCount;
-
     for (let i = 0; i <= rayCount; i++) {
         const angle = startAngle + angleStep * i;
-
         // 局部平面坐标中，构造目标点
         const x = Math.cos(angle) * radius;
         const y = Math.sin(angle) * radius;
         const localTarget = new Cesium.Cartesian3(x, y, 0);
-
         // 转回世界坐标
         const worldTarget = Cesium.Matrix4.multiplyByPoint(transform, localTarget, new Cesium.Cartesian3());
-
         // 计算插值点
         const count = 200;
         let positions = [];
@@ -145,14 +138,12 @@ TerrainVisual.prototype.performSectorLOS = async function (center, target, radiu
             const interp = Cesium.Cartesian3.lerp(center, worldTarget, j / count, new Cesium.Cartesian3());
             positions.push(Cesium.Cartographic.fromCartesian(interp));
         }
-
         const sampled = await Cesium.sampleTerrainMostDetailed(this.viewer.terrainProvider, positions);
 
         // 绘制段
         let last = Cesium.Cartesian3.fromRadians(sampled[0].longitude, sampled[0].latitude, sampled[0].height);
         for (let j = 1; j < sampled.length; j++) {
             const terrainH = sampled[j].height;
-
             const endCarto = Cesium.Cartographic.fromCartesian(worldTarget);
             //获取扇形当前的终点和起点的视点高度
             const sightH = Cesium.Math.lerp(centerHeight, endCarto.height, j / count); 
@@ -160,7 +151,6 @@ TerrainVisual.prototype.performSectorLOS = async function (center, target, radiu
             const distanceToCurrent = Cesium.Cartesian3.distance(center, Cesium.Cartesian3.fromRadians(sampled[j].longitude, sampled[j].latitude, sampled[j].height));
             //获取起点和扇形当前终点的距离
             const distanceToEnd = Cesium.Cartesian3.distance(center, worldTarget);
-            
             // 根据视线的比例计算当前点的视线高度
             const expectedSightHeight = centerHeight + (sightH - centerHeight) * (distanceToCurrent / distanceToEnd) +  this.personHeight ; 
             // 获取当前的笛卡尔坐标点数据
@@ -180,14 +170,13 @@ TerrainVisual.prototype.performSectorLOS = async function (center, target, radiu
             };
             // 判断是否遮挡
             const visible = !blocked &&  terrainH < expectedSightHeight;
-
             console.log(terrainH,expectedSightHeight,"sssssssssss");
-            
             viewer.entities.add({
                 polyline: {
                     positions: [last, curr],
                     width: 1.5,
-                    material: visible ? Cesium.Color.LIME.withAlpha(0.7) : Cesium.Color.RED.withAlpha(0.7)
+                    material: visible ? Cesium.Color.LIME.withAlpha(0.7) : Cesium.Color.RED.withAlpha(0.7),
+                    clampToGround: true
                 }
             });
             last = curr;
