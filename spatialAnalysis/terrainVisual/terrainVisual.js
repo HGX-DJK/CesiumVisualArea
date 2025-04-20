@@ -7,7 +7,8 @@ function TerrainVisual(viewer,type='twoPoint') {
       throw new Cesium.DeveloperError("this.viewer undefined");
     }
     this.viewer = viewer;
-    this.type = type
+    this.type = type;
+    this.personHeight = 1.7;
 }
 
 /**
@@ -82,7 +83,7 @@ TerrainVisual.prototype.performLOSAnalysis = async function (startCartesian, end
         );
         console.log(terrainHeight,expectedSightHeight,"wwwwwwwwwww");
         
-        const isCurrentlyVisible = terrainHeight < expectedSightHeight;
+        const isCurrentlyVisible = terrainHeight < expectedSightHeight +  this.personHeight ;
         // 绘制线段（红 or 绿）
         this.viewer.entities.add({
             polyline: {
@@ -145,7 +146,7 @@ TerrainVisual.prototype.performSectorLOS = async function (center, target, radiu
             positions.push(Cesium.Cartographic.fromCartesian(interp));
         }
 
-        const sampled = await Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, positions);
+        const sampled = await Cesium.sampleTerrainMostDetailed(this.viewer.terrainProvider, positions);
 
         // 绘制段
         let last = Cesium.Cartesian3.fromRadians(sampled[0].longitude, sampled[0].latitude, sampled[0].height);
@@ -154,21 +155,34 @@ TerrainVisual.prototype.performSectorLOS = async function (center, target, radiu
 
             const endCarto = Cesium.Cartographic.fromCartesian(worldTarget);
             //获取扇形当前的终点和起点的视点高度
-            const sightH = Cesium.Math.lerp(centerHeight, endCarto.height, j / count); // 假设目标高度为地面
-
+            const sightH = Cesium.Math.lerp(centerHeight, endCarto.height, j / count); 
+            //获取当前点和起点之间的距离
             const distanceToCurrent = Cesium.Cartesian3.distance(center, Cesium.Cartesian3.fromRadians(sampled[j].longitude, sampled[j].latitude, sampled[j].height));
+            //获取起点和扇形当前终点的距离
             const distanceToEnd = Cesium.Cartesian3.distance(center, worldTarget);
             
             // 根据视线的比例计算当前点的视线高度
-            const expectedSightHeight = centerHeight + (sightH - centerHeight) * (distanceToCurrent / distanceToEnd); // 目标假设在地面
+            const expectedSightHeight = centerHeight + (sightH - centerHeight) * (distanceToCurrent / distanceToEnd) +  this.personHeight ; 
+            // 获取当前的笛卡尔坐标点数据
             const curr = Cesium.Cartesian3.fromRadians(
                 sampled[j].longitude,
                 sampled[j].latitude,
                 sampled[j].height
             );
+             // 检查路径上的地形是否遮挡视线
+            let blocked = false;
+            for (let k = 0; k < j; k++) {
+                const sampleHeight = sampled[k].height;;
+                if (sampleHeight > expectedSightHeight) {
+                    blocked = true;
+                    break;
+                }
+            };
+            // 判断是否遮挡
+            const visible = !blocked &&  terrainH < expectedSightHeight;
 
-            const visible = terrainH < expectedSightHeight;
-
+            console.log(terrainH,expectedSightHeight,"sssssssssss");
+            
             viewer.entities.add({
                 polyline: {
                     positions: [last, curr],
@@ -176,7 +190,6 @@ TerrainVisual.prototype.performSectorLOS = async function (center, target, radiu
                     material: visible ? Cesium.Color.LIME.withAlpha(0.7) : Cesium.Color.RED.withAlpha(0.7)
                 }
             });
-
             last = curr;
         }
     }
