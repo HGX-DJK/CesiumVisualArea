@@ -35,7 +35,7 @@
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZjQ5ZGUzNC1jNWYwLTQ1ZTMtYmNjYS05YTY4ZTVmN2I2MDkiLCJpZCI6MTE3MTM4LCJpYXQiOjE2NzY0NDUyODB9.ZaNSBIfc1sGLhQd_xqhiSsc0yr8oS0wt1hAo9gbke6M'
         initMap();
         //初始化地图
-        function initMap() {
+        async function initMap() {
             //注册Cesium Ion令牌
             viewer = new Cesium.Viewer("map-container", {
                 geocoder: true,              //控制地图是否显示一个地理编码（geocoding）控件，允许用户搜索地点并定位到特定位置。
@@ -54,10 +54,14 @@
                 imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
                     url: "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
                 }),
-                terrain: Cesium.Terrain.fromWorldTerrain({
-                    requestVertexNormals: true,  // 启用地形法线(光照效果)
-                    requestWaterMask: true       // 启用海洋水面效果
+                terrainProvider: await Cesium.CesiumTerrainProvider.fromUrl("http://data.mars3d.cn/terrain", {
+                       requestVertexNormals: true,
+                       requestWaterMask: true
                 })
+                // terrain: Cesium.Terrain.fromWorldTerrain({
+                //     requestVertexNormals: true,  // 启用地形法线(光照效果)
+                //     requestWaterMask: true       // 启用海洋水面效果
+                // })
             });
             // 去除logo
             viewer.cesiumWidget.creditContainer.style.display = "none";

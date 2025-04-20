@@ -36,7 +36,7 @@
         //初始化地图
         initMap();
         //初始化地图
-        function initMap() {
+        async function initMap() {
             //注册Cesium Ion令牌
             viewer = new Cesium.Viewer("map-container", {
                 geocoder: true,              //控制地图是否显示一个地理编码（geocoding）控件，允许用户搜索地点并定位到特定位置。
@@ -55,10 +55,14 @@
                 imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
                     url: "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
                 }),
-                terrain: Cesium.Terrain.fromWorldTerrain({
-                    requestVertexNormals: true,  // 启用地形法线(光照效果)
-                    requestWaterMask: true       // 启用海洋水面效果
+                terrainProvider: await Cesium.CesiumTerrainProvider.fromUrl("http://data.mars3d.cn/terrain", {
+                        requestVertexNormals: true,
+                        requestWaterMask: true
                 })
+                // terrain: Cesium.Terrain.fromWorldTerrain({
+                //     requestVertexNormals: true,  // 启用地形法线(光照效果)
+                //     requestWaterMask: true       // 启用海洋水面效果
+                // })
             });
             // 去除logo
             viewer.cesiumWidget.creditContainer.style.display = "none";
@@ -78,15 +82,17 @@
                 },
             });
             applyRealteFun();
+            
         };
 
         //执行某些功能
         function applyRealteFun() {
             addPolygonArea();
             addPointLabel();
-            addTerrainVisualAnalysis();
+            // addTerrainVisualAnalysis();
+            addVisualAnalysis();
             // setViewDestination();
-            // addTerrain();
+            addTerrain();
             // addClickEvent();
         };
         //设置地图视角
@@ -105,13 +111,8 @@
         };
 
         //加载地形
-        function addTerrain() {
-            const terrainProvider = new Cesium.CesiumTerrainProvider({
-                url: 'https://your-terrain-server.com/tilesets/terrain/', // 替换成你的地址
-                requestVertexNormals: true,  // 开启地形照明（阴影）
-                requestWaterMask: true       // 开启水面效果（海洋）
-            });
-            viewer.terrain = terrainProvider;
+        async function addTerrain() {
+         
         };
 
         //添加面

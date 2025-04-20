@@ -34,7 +34,7 @@
         let viewer = null;
         initMap();
         //初始化地图
-        function initMap() {
+        async function initMap() {
             //登录 Cesium ion 获取
             Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4YWI1MDE0NC04YzRmLTQwMjctOTkyYi1lNWIyOTg2M2UzNzciLCJpZCI6Mzk0OTMsImlhdCI6MTYyNzk1NTMzNH0._2wriH5J7RDqb0ul-loyFCeRhW9Ebs0oXTWqQrboagE';
             //注册Cesium Ion令牌
@@ -56,10 +56,14 @@
                 imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
                     url: "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
                 }),
-                terrain: Cesium.Terrain.fromWorldTerrain({
-                    requestVertexNormals: true,
-                    requestWaterMask: true
-                })
+                terrainProvider: await Cesium.CesiumTerrainProvider.fromUrl("http://data.mars3d.cn/terrain", {
+                       requestVertexNormals: true,
+                       requestWaterMask: true
+                }),
+                // terrain: Cesium.Terrain.fromWorldTerrain({
+                //     requestVertexNormals: true,
+                //     requestWaterMask: true
+                // })
             });
             // 去除logo
             viewer.cesiumWidget.creditContainer.style.display = "none";
@@ -80,6 +84,7 @@
             });
             addPolygonArea();
             startVisual();
+            console.log(viewer,"viewer");
         };
 
         //添加面

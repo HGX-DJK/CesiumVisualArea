@@ -54,7 +54,7 @@ TerrainVisual.prototype.startTerrainAnalysis = function () {
 TerrainVisual.prototype.performLOSAnalysis = async function (startCartesian, endCartesian) {
     const startCarto = Cesium.Cartographic.fromCartesian(startCartesian);
     const endCarto = Cesium.Cartographic.fromCartesian(endCartesian);
-    const count = 100;
+    const count = 300;
     let positions = [];
     for (let i = 0; i <= count; i++) {
         const lon = Cesium.Math.lerp(startCarto.longitude, endCarto.longitude, i / count);
@@ -68,12 +68,21 @@ TerrainVisual.prototype.performLOSAnalysis = async function (startCartesian, end
     for (let i = 1; i < sampled.length; i++) {
         const terrainHeight = sampled[i].height;
         const sightHeight = Cesium.Math.lerp(startCarto.height, endCarto.height, i / count);
+
+        // 计算当前点与起点之间的视线高度
+        const distanceToCurrent = Cesium.Cartesian3.distance(startCartesian,  Cesium.Cartesian3.fromRadians(sampled[i].longitude, sampled[i].latitude, sampled[i].height));
+        const distanceToEnd = Cesium.Cartesian3.distance(startCartesian, endCartesian);
+        // 根据视线的比例计算当前点的视线高度
+        const expectedSightHeight = startCarto.height + (sightHeight - startCarto.height) * (distanceToCurrent / distanceToEnd);
+  
         const current = Cesium.Cartesian3.fromRadians(
             sampled[i].longitude,
             sampled[i].latitude,
             sampled[i].height
         );
-        const isCurrentlyVisible = terrainHeight < sightHeight;
+        console.log(terrainHeight,expectedSightHeight,"wwwwwwwwwww");
+        
+        const isCurrentlyVisible = terrainHeight < expectedSightHeight;
         // 绘制线段（红 or 绿）
         this.viewer.entities.add({
             polyline: {
@@ -129,7 +138,7 @@ TerrainVisual.prototype.performSectorLOS = async function (center, target, radiu
         const worldTarget = Cesium.Matrix4.multiplyByPoint(transform, localTarget, new Cesium.Cartesian3());
 
         // 计算插值点
-        const count = 100;
+        const count = 200;
         let positions = [];
         for (let j = 0; j <= count; j++) {
             const interp = Cesium.Cartesian3.lerp(center, worldTarget, j / count, new Cesium.Cartesian3());
@@ -142,15 +151,23 @@ TerrainVisual.prototype.performSectorLOS = async function (center, target, radiu
         let last = Cesium.Cartesian3.fromRadians(sampled[0].longitude, sampled[0].latitude, sampled[0].height);
         for (let j = 1; j < sampled.length; j++) {
             const terrainH = sampled[j].height;
-            const sightH = Cesium.Math.lerp(centerHeight, 0, j / count); // 假设目标高度为地面
 
+            const endCarto = Cesium.Cartographic.fromCartesian(worldTarget);
+            //获取扇形当前的终点和起点的视点高度
+            const sightH = Cesium.Math.lerp(centerHeight, endCarto.height, j / count); // 假设目标高度为地面
+
+            const distanceToCurrent = Cesium.Cartesian3.distance(center, Cesium.Cartesian3.fromRadians(sampled[j].longitude, sampled[j].latitude, sampled[j].height));
+            const distanceToEnd = Cesium.Cartesian3.distance(center, worldTarget);
+            
+            // 根据视线的比例计算当前点的视线高度
+            const expectedSightHeight = centerHeight + (sightH - centerHeight) * (distanceToCurrent / distanceToEnd); // 目标假设在地面
             const curr = Cesium.Cartesian3.fromRadians(
                 sampled[j].longitude,
                 sampled[j].latitude,
                 sampled[j].height
             );
 
-            const visible = terrainH < sightH;
+            const visible = terrainH < expectedSightHeight;
 
             viewer.entities.add({
                 polyline: {
