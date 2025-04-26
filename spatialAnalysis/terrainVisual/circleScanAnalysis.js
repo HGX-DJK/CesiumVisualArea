@@ -300,7 +300,7 @@ circleScanAnalysis.prototype.showIntersection = function(result, destPoint, view
     // 如果是场景模型的交互点，排除交互点是地球表面
     if (Cesium.defined(result) && Cesium.defined(result.object)) {
       this.drawLine(result.position, viewPoint, Cesium.Color.GREEN); // 可视区域
-      this.drawLine(result.position, destPoint, Cesium.Color.RED); // 不可视区域
+      this.drawLine(result.position, destPoint, Cesium.Color.RED);   // 不可视区域
     } else {
       this.drawLine(viewPoint, destPoint, Cesium.Color.GREEN);
     }
